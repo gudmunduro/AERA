@@ -504,7 +504,17 @@ namespace tcp_io_device {
     for (int i = 0; i < data->variables_size(); ++i) {
       MsgData var(&(data->variables(i)));
       auto entity = entities_[id_mapping_[var.getMetaData().getEntityID()]];
-      auto obj = objects_[id_mapping_[var.getMetaData().getID()]];
+
+      const auto &id_string = id_mapping_[var.getMetaData().getID()];
+      if (commands_.count(id_string) > 0)
+      {
+        auto cmd = commands_[id_string]; 
+        handleCmdFromMessage(cmd, entity, var);
+        continue;
+      }
+      
+      
+      auto obj = objects_[id_string];
       // std::cout << "Variable " << i << ":" << std::endl;
       // std::cout << "Entity: " << id_mapping_[var.getMetaData().getEntityID()] << std::endl;
       // std::cout << "Property: " << id_mapping_[var.getMetaData().getID()] << std::endl;
@@ -568,6 +578,73 @@ namespace tcp_io_device {
         
       }
     }
+  }
+
+  template<class O, class S>
+  void TcpIoDevice<O, S>::handleCmdFromMessage(uint16 cmd_id, Code *entity, MsgData& var) {
+    const auto dimension = var.getMetaData().getDimensions().front();
+    const auto size = dimension == 0 ? 5 : 8 + dimension;
+    
+    Code *cmd = _Mem::Get()->build_object(Atom::Object(17, 3));
+
+    // References section
+    cmd->add_reference(entity);
+
+    // Code section
+    cmd->resize_code(size);
+    cmd->code(1) = Atom::DeviceFunction(cmd_id);
+    cmd->code(2) = Atom::IPointer(4); // Pointer to the arg is always 4
+    cmd->code(3) = Atom::Float(1); // TODO: Check what code 3 is supposed to be, seems to always be the same value
+    cmd->code(4) = Atom::Set(dimension == 0 ? 1 : 2);
+    cmd->code(5) = Atom::RPointer(0);
+    if (dimension != 0)
+    {
+      cmd->code(6) = Atom::IPointer(7);
+      cmd->code(7) = Atom::Object(GetOpcode(var.getMetaData().getOpCodeHandle().c_str()), dimension);
+    }
+
+    if (var.getMetaData().getType() == VariableDescription_DataType_DOUBLE)
+    {
+      const auto data = var.getData<double>();
+      for (int i = 0; i < data.size(); i++)
+      {
+        cmd->code(8+i) = Atom::Float(static_cast<float32>(data[i]));
+      }
+    }
+    else if (var.getMetaData().getType() == VariableDescription_DataType_INT64)
+    {
+      const auto data = var.getData<int64_t>();
+      for (int i = 0; i < data.size(); i++)
+      {
+        cmd->code(8+i) = Atom::Float(static_cast<float32>(data[i]));
+      } 
+    }
+    else if (var.getMetaData().getType() == VariableDescription_DataType_COMMUNICATION_ID)
+    {
+      if (dimension != 0)
+      {
+        const auto comm_id = var.getData<int64_t>()[0];
+        cmd->code(8) = Atom(static_cast<uint32>(comm_id));
+      }
+      else
+      {
+        // TODO: Might have to resize code section if comm id is -1
+        cmd->code(4) = Atom::Set(1);
+        cmd->code(6) = Atom::Nil();
+        cmd->code(7) = Atom::Nil();
+      }
+    }
+
+    auto now = Now();
+    auto relative_time = duration_cast<microseconds>(now - Utils::GetTimeReference());
+    auto frame_start = now - (relative_time % _Mem::Get()->get_sampling_period());
+    auto after = max(now, frame_start + 2 * Utils::GetTimeTolerance());
+    auto before = frame_start + _Mem::Get()->get_sampling_period();
+
+    Fact *fact = new Fact(cmd, after, before, 1, 1);
+    View *view = new View(View::SYNC_ONCE, now, 1, 1, _Mem::Get()->get_stdin(), nullptr, fact);
+    _Mem::Get()->inject(view);
+    //inject_fact_from_io_device(cmd, after, before, View::SYNC_ONCE, _Mem::Get()->get_stdin());
   }
 
   template<class O, class S>

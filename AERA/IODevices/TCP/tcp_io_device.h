@@ -101,6 +101,8 @@
 #include <thread>
 #include <bitset>
 
+#include "AERA_Protobuf/utils.h"
+
 #ifndef ENABLE_PROTOBUF
 
 namespace tcp_io_device {
@@ -236,6 +238,8 @@ namespace tcp_io_device {
     * \param data_msg The incoming data message.
     */
     void handleDataMessage(std::unique_ptr<TCPMessage> data_msg);
+
+    void handleCmdFromMessage(uint16 cmd_id, r_code::Code *entity, MsgData& var);
 
     /**
     * Injects numeric (i.e., int and double) variables without specified opcode_handle (i.e., empty string). Single dimensional variables are injected as is, empty and multi dimensional variables are injected as sets.
