@@ -4,6 +4,7 @@
 
 !class (vec2 x:nb y:nb)
 !class (vec3 x:nb y:nb z:nb)
+!class (vec4 x:nb y:nb z:nb w:nb)
 !class (vec vals:[])
 !class (quat x:nb y:nb z:nb w:nb)
 !class (speech_context (_obj {speaker:ent listener:ent}))
@@ -41,6 +42,7 @@
 !dfn (set_state :); arg0: an object, arg1: the state.
 !dfn (tick :)
 !dfn (measure :); arg0: an entity to measure. e.g. measure [camera] to take a measurement with the camera.
+!dfn (mov_j :); arg0: an object, arg1: target pos_rot
 
 ; The sampling_period should be 2 * base_period, where base_period is from settings.xml.
 !def sampling_period 100ms
@@ -58,6 +60,14 @@ position:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 position_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 position_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 position_z:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cam_position:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cam_position_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cam_position_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cam_position_z:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+size:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+pos_rot:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+cam_obj:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+obj_type:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 velocity:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 velocity_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 velocity_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
@@ -80,7 +90,7 @@ rotation:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 
 
 attachment:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val self_right_hand attachment a_thing 1)
-holding:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val hand holding [a_thing] 1) or (mk.val hand holding [] 1)
+holding:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val hand holding [1] 1) or (mk.val hand holding [] 1)
 spoken:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor spoken a_sentence 1)
 pointed_at:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor pointed_at a_location 1)
 looked_at:(ont 1) [[SYNC_ONCE now 0 forever root nil]]; usage: (mk.val an_actor looked_at a_location 1)

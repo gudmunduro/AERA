@@ -1,0 +1,106 @@
+; There are 5 objects in this example: a small cube and a large cube (training objects), a large sphere, a small sphere and a large cylinder (test objects).
+; The example is composed of two phases: training and test phases. The agent is trained in the training phase and its knowledge transfer
+;    is tested in the test phase.
+; Training: The AERA agent learns prior information by performing experminents via grasping abd releasing the small and the large cubes.
+; Test phase: When the drives are injected, it must modify the prior knolwedge and generate new knowledge in the form of CST-REQs that is 
+;    useful for grasping and/or releasing the test objects (the small cylinder and the large sphere).
+; Three drives are injected during the test phase: h holding [cyl], h holding [], and h holding [s].
+
+h:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+h_is_a_hand:(mk.val h essence hand 1) |[]
+(fact h_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+c:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+c_is_a_camera:(mk.val c essence camera 1) |[]
+(fact c_is_a_camera 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+; Hand H has position P.
+S0:(cst [] []
+    (fact (mk.val H: essence hand :) T0: T1: : :); Changed X to hand.
+    (fact (mk.val H: position P: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S1:(cst [] []
+    (fact (mk.val C: essence camera :) T0: T1: : :)
+    (fact (mk.val C: size [S:] :) T0: T1: : :)
+    (fact (mk.val C: obj_type [T:] :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+cst_249:(cst [] []
+    (fact (mk.val H: holding [C:] :) T0: T1: : :)
+    (fact (icst S0 [] [H: PH:] : :) T0: T1: : :)
+    (fact (icst S1 [] [C: S: T:] : :) T0: T1: : :)
+    (fact (mk.val C: position PC: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+mdl_250:(mdl [C: (ti T0: T1:)] []
+    (fact (cmd release [H:] 1) T0_cmd: T1_cmd: : :)
+    (fact (mk.val H: holding [] 1) T2: T3: : :)
+[]
+    T2:(add T0 100ms)
+    T3:(add T1 100ms)
+[]
+    T0:(sub T2 100ms)
+    T1:(sub T3 100ms)
+    T0_cmd:(sub T2 80ms)
+    T1_cmd:(sub T3 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+mdl_251:(mdl [] []
+    (fact (icst cst_249 [] [H: C: PH: S: T: PC:] : :) T0: T1: : :)
+    (fact (imdl mdl_250 [C: (ti T0: T1:)] [H: T2: T3:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+start:(pgm [] [] [] []
+   (cmd ready ["camera-basic"] 1)
+1) |[]
+(ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+m_drive:(mdl [] []
+   ; The goal target timings are the same as the drive timings.
+   (fact (mk.val h holding [] 1) T0: T1: 1 1)
+   (fact run T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+pgm_inject_drive_pass1:(pgm [] []
+   ; This fact repeats periodically. We use it as a "heartbeat".
+   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+[]
+   (>= After (+ this.vw.ijt 100ms))
+[]
+   ; The end of the time interval will be used in m_drive as the end of the goal interval.
+   (inj [F_run:(fact run After (+ Before 300ms) 1 1) []])
+   (inj [G:(goal F_run self nil 1) []])
+   (inj []
+      ; Delay a little to allow predictions for this sampling period before injecting the drive.
+      F_g:(fact G T0:(+ After 10ms) T0 1 1)
+      [SYNC_ONCE T0 1 forever primary nil]
+   )
+   (prb [1 "print" "injected drive 1" []])
+1) |[]
+(ipgm pgm_inject_drive_pass1 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+   
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pgm_eject_cmd_release:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd release [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd release [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_release [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]

@@ -1,0 +1,19 @@
+; robot is the ontology class of all robots.
+robot:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+; Name an entity b.
+r:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+; The statement that r is a robot.
+r_is_a_robot:(mk.val r essence robot 1) |[]
+; Make r_is_a_robot a fact from now to the maximum time. 
+f_r_is_a_robot:(fact r_is_a_robot 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+
+(goal (fact (cmd mov_j [[350.0 0.0 0.0 45.0]] 1) 0s:0ms:0us GIGASEC 1 1) self nil 1) [[SYNC_ONCE 0s:0ms:0us 1 forever primary nil]]
+
+
+start:(pgm |[] |[] |[] []
+   (cmd ready ["robot" r] 1)
+   (cmd mov_j [r [350.0 0.0 0.0 45.0]] 1)
+1) |[]
+; Instantiate the start program to run once.
+istart:(ipgm start |[] RUN_ONCE sampling_period VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]

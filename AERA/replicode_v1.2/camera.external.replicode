@@ -8,57 +8,14 @@
 
 small:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
 large:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
-size:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
-shape:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 
 h:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
 h_is_a_hand:(mk.val h essence hand 1) |[]
 (fact h_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
-c1:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-cube_1_is_a_cube:(mk.val c1 shape cube 1) |[]
-(fact cube_1_is_a_cube 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cube_1_is_small:(mk.val c1 size small 1) |[]
-(fact cube_1_is_small 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cube_1_is_a_hand:(mk.val c1 essence hand 1) |[]
-; This is needed for S3.
-(|fact cube_1_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-
-c2:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-cube_2_is_a_cube:(mk.val c2 shape cube 1) |[]
-(fact cube_2_is_a_cube 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cube_2_is_large:(mk.val c2 size large 1) |[]
-(fact cube_2_is_large 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cube_2_is_a_hand:(mk.val c2 essence hand 1) |[]
-; This is needed for S3.
-(|fact cube_2_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-
-cyl:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-cyl_1_is_a_cylinder:(mk.val cyl shape cylinder 1) |[]
-(fact cyl_1_is_a_cylinder 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cyl_1_is_large:(mk.val cyl size large 1) |[]
-(fact cyl_1_is_large 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-cyl_1_is_a_hand:(mk.val cyl essence hand 1) |[]
-; This is needed for S3.
-(|fact cyl_1_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-
-s1:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-sphere_1_is_a_sphere:(mk.val s1 shape sphere 1) |[]
-(fact sphere_1_is_a_sphere 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-sphere_1_is_large:(mk.val s1 size large 1) |[]
-(fact sphere_1_is_large 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-sphere_1_is_a_hand:(mk.val s1 essence hand 1) |[]
-; This is needed for S3.
-(|fact sphere_1_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-
-s2:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
-sphere_2_is_a_sphere:(mk.val s2 shape sphere 1) |[]
-(fact sphere_2_is_a_sphere 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-sphere_2_is_small:(mk.val s2 size small 1) |[]
-(fact sphere_2_is_small 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
-sphere_2_is_a_hand:(mk.val s2 essence hand 1) |[]
-; This is needed for S3.
-(|fact sphere_2_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+c:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+c_is_a_camera:(mk.val c essence camera 1) |[]
+(fact c_is_a_camera 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
 ; Hand H has position P.
 S0:(cst [] []
@@ -68,20 +25,12 @@ S0:(cst [] []
 |[]
 [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
-; A thing C of kind X occupies position P. (Modified to exclude when C is a hand.)
-S3:(cst [] []
-   (fact (mk.val C: essence X: :) T0: T1: : :)
-   (fact (mk.val C: position P: :) T0: T1: : :)
-   (|fact (mk.val C: essence hand :) T0: T1: : :); Don't duplicate S0, which is for hands.
-|[]
-|[]
-[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
-
-; A thing C of size X occupies position P. (Modified to exclude when C is a hand.)
-S4:(cst [] []
-   (fact (mk.val C: size X: :) T0: T1: : :)
-   (fact (mk.val C: position P: :) T0: T1: : :)
-   (|fact (mk.val C: essence hand :) T0: T1: : :); Don't duplicate S0, which is for hands.
+; Camera recognizes at position and obj_type
+S1:(cst [] []
+   (fact (mk.val C: essence camera :) T0: T1: : :)
+   ; (fact (mk.val C: position P: :) T0: T1: : :)
+   (fact (mk.val C: size [S:] :) T0: T1: : :)
+   (fact (mk.val C: obj_type [T:] :) T0: T1: : :)
 |[]
 |[]
 [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
@@ -92,14 +41,21 @@ start:(pgm [] [] [] []
 (ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
 
 
+; Refactor these to be about holding something, but not a specific entity
+
+; Run is injected as a goal later
+; Modify these to change the what actually needs to happen to reach the goal
+
+; First goal is to be holding a small sphere
 m_drive:(mdl [] []
    ; The goal target timings are the same as the drive timings.
-   (fact (mk.val h holding [s1] 1) T0: T1: 1 1)
+   (fact (mk.val h holding [c] 1) T0: T1: 1 1)
    (fact run T0: T1: ::)
 |[]
 |[]
 [stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
+; Goal 2 is to release the small sphere
 m_drive2:(mdl [] []
    ; The goal target timings are the same as the drive timings.
    (fact (mk.val h holding [] 1) T0: T1: 1 1)
@@ -108,21 +64,18 @@ m_drive2:(mdl [] []
 |[]
 [stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
+; Goal 3 is to pick up a big sphere
 m_drive3:(mdl [] []
    ; The goal target timings are the same as the drive timings.
-   (fact (mk.val h holding [s2] 1) T0: T1: 1 1)
+   (fact (mk.val h holding [c] 1) T0: T1: 1 1)
    (fact run3 T0: T1: ::)
 |[]
 |[]
 [stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
-m_drive4:(mdl [] []
-   ; The goal target timings are the same as the drive timings.
-   (fact (mk.val h holding [cyl] 1) T0: T1: 1 1)
-   (fact run4 T0: T1: ::)
-|[]
-|[]
-[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+; End of goals (models to reach goal) section
+
+; Babbling (the moves that are performed at the beginning)
 
 pgm_babbleA_1:(pgm [] []
    ; This fact repeats periodically. We use it as a "heartbeat".
@@ -172,7 +125,7 @@ pgm_babbleA_3:(pgm [] []
    (>= After (+ this.vw.ijt 300ms))
 []
    ; Grab the sphere.
-   (inj [Command:(cmd grab_type1 [h] 1) []])
+   (inj [Command:(cmd grab [h 1] 1) []])
    (inj [F_Command:(fact Command After Before 1 1) []])
    (inj [G:(goal F_Command self nil 1) []])
    (inj []
@@ -180,7 +133,7 @@ pgm_babbleA_3:(pgm [] []
       (fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected (cmd grab_type1 [h])" []])
+   (prb [1 "print" "injected (cmd grab [h 1])" []])
 1) |[]
 (ipgm pgm_babbleA_3 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
@@ -234,7 +187,7 @@ pgm_babbleA_6:(pgm [] []
    (>= After (+ this.vw.ijt 600ms))
 []
    ; Grab the sphere.
-   (inj [Command:(cmd grab_type2 [h] 1) []])
+   (inj [Command:(cmd grab [h 1] 1) []])
    (inj [F_Command:(fact Command After Before 1 1) []])
    (inj [G:(goal F_Command self nil 1) []])
    (inj []
@@ -242,7 +195,7 @@ pgm_babbleA_6:(pgm [] []
       (fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected (cmd grab_type2 [h])" []])
+   (prb [1 "print" "injected (cmd grab [h 1])" []])
 1) |[]
 (ipgm pgm_babbleA_6 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
@@ -252,6 +205,26 @@ pgm_babbleA_7:(pgm [] []
    (ptn (fact (mk.val h position : :) After: Before: ::) [])
 []
    (>= After (+ this.vw.ijt 700ms))
+[]
+   ; Release the sphere to learn the release model and the "holding" cst.
+   (inj [Command:(cmd grab [h 2] 1) []])
+   (inj [F_Command:(fact Command After Before 1 1) []])
+   (inj [G:(goal F_Command self nil 1) []])
+   (inj []
+      ; Delay a little to allow predictions for this sampling period before processing.
+      (fact G T0:(+ After 10ms) T0 1 1)
+      [SYNC_ONCE T0 1 forever primary nil]
+   )
+   (prb [1 "print" "injected (cmd grab [h 2])" []])
+1) |[]
+(ipgm pgm_babbleA_7 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+   
+pgm_babbleA_8:(pgm [] []
+   ; This fact repeats periodically. We use it as a "heartbeat".
+   (ptn (fact (mk.val h position : :) After: Before: ::) [])
+[]
+   (>= After (+ this.vw.ijt 800ms))
 []
    ; Release the sphere to learn the release model and the "holding" cst.
    (inj [Command:(cmd release [h] 1) []])
@@ -264,8 +237,10 @@ pgm_babbleA_7:(pgm [] []
    )
    (prb [1 "print" "injected (cmd release [h])" []])
 1) |[]
-(ipgm pgm_babbleA_7 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
+(ipgm pgm_babbleA_8 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
+
+
 
 ; Inject drive.
 
@@ -273,18 +248,17 @@ pgm_inject_drive_pass1:(pgm [] []
    ; This fact repeats periodically. We use it as a "heartbeat".
    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
 []
-   (>= After (+ this.vw.ijt 800ms))
-   (<= After (+ this.vw.ijt 900ms))
+   (>= After (+ this.vw.ijt 900ms))
 []
    ; The end of the time interval will be used in m_drive as the end of the goal interval.
    (inj [F_run:(fact run After (+ Before 300ms) 1 1) []])
    (inj [G:(goal F_run self nil 1) []])
    (inj []
       ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
+      F_g:(fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected drive 1" []])
+   (prb [1 "print" "injected drive 1" [F_run F_g]])
 1) |[]
 (ipgm pgm_inject_drive_pass1 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
@@ -296,14 +270,14 @@ pgm_inject_drive_pass2:(pgm [] []
    (>= After (+ this.vw.ijt 1000ms))
 []
    ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run2 After (+ Before 200ms) 1 1) []])
+   (inj [F_run:(fact run2 After (+ Before 100ms) 1 1) []])
    (inj [G:(goal F_run self nil 1) []])
    (inj []
       ; Delay a little to allow predictions for this sampling period before injecting the drive.
       (fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected drive 2" []])
+   (prb [1 "print" "injected drive 2" [F_run]])
 1) |[]
 (ipgm pgm_inject_drive_pass2 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
@@ -313,7 +287,6 @@ pgm_inject_drive_pass3:(pgm [] []
    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
 []
    (>= After (+ this.vw.ijt 1100ms))
-   (<= After (+ this.vw.ijt 1200ms))
 []
    ; The end of the time interval will be used in m_drive as the end of the goal interval.
    (inj [F_run:(fact run3 After (+ Before 300ms) 1 1) []])
@@ -328,44 +301,6 @@ pgm_inject_drive_pass3:(pgm [] []
 (ipgm pgm_inject_drive_pass3 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
 
-pgm_inject_drive_pass4:(pgm [] []
-   ; This fact repeats periodically. We use it as a "heartbeat".
-   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
-[]
-   (>= After (+ this.vw.ijt 1300ms))
-[]
-   ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run2 After (+ Before 100ms) 1 1) []])
-   (inj [G:(goal F_run self nil 1) []])
-   (inj []
-      ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
-      [SYNC_ONCE T0 1 forever primary nil]
-   )
-   (prb [1 "print" "injected drive 2" []])
-1) |[]
-(ipgm pgm_inject_drive_pass4 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
-   [SYNC_ONCE now 0 forever primary nil 1]
-
-pgm_inject_drive_pass5:(pgm [] []
-   ; This fact repeats periodically. We use it as a "heartbeat".
-   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
-[]
-   (>= After (+ this.vw.ijt 1400ms))
-   (<= After (+ this.vw.ijt 1500ms))
-[]
-   ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run4 After (+ Before 300ms) 1 1) []])
-   (inj [G:(goal F_run self nil 1) []])
-   (inj []
-      ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
-      [SYNC_ONCE T0 1 forever primary nil]
-   )
-   (prb [1 "print" "injected drive 4" []])
-1) |[]
-(ipgm pgm_inject_drive_pass5 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
-   [SYNC_ONCE now 0 forever primary nil 1]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pgm_eject_cmd_move:(pgm [] []
@@ -399,6 +334,17 @@ pgm_eject_cmd_grab_type2:(pgm [] []
    (cmd grab_type2 [H] 1)
 1) |[]
 (ipgm pgm_eject_cmd_grab_type2 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+   
+pgm_eject_cmd_grab:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd grab [H: S:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd grab [H S] 1)
+1) |[]
+(ipgm pgm_eject_cmd_grab [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
 
 pgm_eject_cmd_release:(pgm [] []

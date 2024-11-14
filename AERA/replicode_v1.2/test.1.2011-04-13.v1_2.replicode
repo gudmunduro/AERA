@@ -1,5 +1,5 @@
 ; Source code: Eric Nivel / CADIA-RU
-; Additional comments: Helgi Páll Helgason / CADIA-RU
+; Additional comments: Helgi PÃ¡ll Helgason / CADIA-RU
 the_right_hand:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
 a_cup:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
 ; same_pos[X Y P T]:[(X position P)T, (Y position P)T]

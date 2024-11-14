@@ -301,6 +301,7 @@
     <None Include="replicode_v1.2\hand-grab-sphere-learn.external.ur.replicode">
       <Filter>replicode_v1.2</Filter>
     </None>
+    <None Include="replicode_v1.2\dobot-test.external.replicode" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />

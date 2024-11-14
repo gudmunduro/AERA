@@ -1,0 +1,85 @@
+; Simple demo using a real robot with AERA
+
+small:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+large:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+
+h:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+h_is_a_hand:(mk.val h essence hand 1) |[]
+(fact h_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+c:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+c_is_a_camera:(mk.val c essence camera 1) |[]
+(fact c_is_a_camera 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+; Camera objects
+co1:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co1_is_a_cam_obj:(mk.val co1 essence cam_obj 1) |[]
+(fact co1_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co2:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co2_is_a_cam_obj:(mk.val co2 essence cam_obj 1) |[]
+(fact co2_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co3:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co3_is_a_cam_obj:(mk.val co3 essence cam_obj 1) |[]
+(fact co3_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+; Start
+
+start:(pgm [] [] [] []
+   (cmd ready ["external-cmd"] 1)
+1) |[]
+(ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; Command to move the robot
+pgm_eject_cmd_mov_j:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd mov_j [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   command:(cmd mov_j [H P] 1)
+   (prb [1 "print" "Cmd" [command]])
+1) |[]
+(ipgm pgm_eject_cmd_mov_j [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to move the robot by relative coordinates
+pgm_eject_cmd_move:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd move [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   command:(cmd move [H P] 1)
+   (prb [1 "print" "Cmd" [command]])
+1) |[]
+(ipgm pgm_eject_cmd_move [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to grab
+pgm_eject_cmd_grab:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd grab [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd grab [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_grab [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to release
+pgm_eject_cmd_release:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd release [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd release [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_release [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
