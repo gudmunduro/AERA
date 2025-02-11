@@ -24,27 +24,20 @@ co3:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
 co3_is_a_cam_obj:(mk.val co3 essence cam_obj 1) |[]
 (fact co3_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
 
+
 ; Hand H has position P.
 S0:(cst [] []
    (fact (mk.val H: essence hand :) T0: T1: : :); Changed X to hand.
    (fact (mk.val H: position P: :) T0: T1: : :)
+   (fact (mk.val H: holding B: :) T0: T1: : :)
 |[]
 |[]
 [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
 start:(pgm [] [] [] []
    (cmd ready ["robot-cam-demo"] 1)
-   ; (cmd enable_robot [h] 1)
 1) |[]
 (ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
-
-; Change position to move
-; mdl_1:(mdl [] []
-;    (fact (cmd mov_j [h: (vec4 v0: v1: v2: v3:)] 1) T0: T1: 1 1)
-;    (fact (mk.val h: position (vec4 v0: v1: v2: v3:) 1) T0: T1: 1 1)
-; |[]
-; |[]
-; [stdin] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
 ; The drive models
 
@@ -66,7 +59,7 @@ pgm_babbleA_1:(pgm [] []
    (>= After (+ this.vw.ijt 100ms))
 []
    ; TODO: Set a real position
-   (inj [Command:(cmd mov_j [h (vec4 250 0 0 45)] 1) []])
+   (inj [Command:(cmd mov_j [h (vec4 260 10 0 55)] 1) []])
    (inj [F_Command:(fact Command After Before 1 1) []])
    (inj [G:(goal F_Command self nil 1) []])
    (inj []
@@ -74,13 +67,12 @@ pgm_babbleA_1:(pgm [] []
       (fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected (cmd mov_j [h [250 0 0 45]])" []])
+   (prb [1 "print" "injected (cmd mov_j [h (vec4 260 10 0 55)])" []])
 1) |[]
 (ipgm pgm_babbleA_1 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
 
-
-; Move to cube 2
+; Grab the cube
 pgm_babbleA_2:(pgm [] []
    ; This fact repeats periodically. We use it as a "heartbeat".
    (ptn (fact (mk.val h position : :) After: Before: ::) [])
@@ -88,7 +80,7 @@ pgm_babbleA_2:(pgm [] []
    (>= After (+ this.vw.ijt 200ms))
 []
    ; TODO: Set a real position
-   (inj [Command:(cmd mov_j [h (vec4 260 20 0 70)] 1) []])
+   (inj [Command:(cmd grab [h] 1) []])
    (inj [F_Command:(fact Command After Before 1 1) []])
    (inj [G:(goal F_Command self nil 1) []])
    (inj []
@@ -96,11 +88,10 @@ pgm_babbleA_2:(pgm [] []
       (fact G T0:(+ After 10ms) T0 1 1)
       [SYNC_ONCE T0 1 forever primary nil]
    )
-   (prb [1 "print" "injected (cmd mov_j [h [260 20 0 70]])" []])
+   (prb [1 "print" "injected (cmd grab [h])" []])
 1) |[]
 (ipgm pgm_babbleA_2 [] RUN_ONCE MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
-
 
 ; Inject drives
 
@@ -139,13 +130,14 @@ pgm_eject_cmd_mov_j:(pgm [] []
 (ipgm pgm_eject_cmd_mov_j [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
    [SYNC_ONCE now 0 forever primary nil 1]
 
-; pgm_eject_cmd_enable_robot:(pgm [] []
-;    (ptn (fact G:(goal (fact (cmd enable_robot [H:] :) ::) ::) ::) [])
-; []
-;    ; Only eject non-simulation goals.
-;    (= (is_sim G) false)
-; []
-;    (cmd enable_robot [H] 1)
-; 1) |[]
-; (ipgm pgm_eject_cmd_enable_robot [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
-;    [SYNC_ONCE now 0 forever primary nil 1]
+; Command to grab
+pgm_eject_cmd_grab:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd grab [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd grab [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_grab [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]

@@ -43,6 +43,7 @@
 !dfn (tick :)
 !dfn (measure :); arg0: an entity to measure. e.g. measure [camera] to take a measurement with the camera.
 !dfn (mov_j :); arg0: an object, arg1: target pos_rot
+!dfn (enable_robot :); arg0: an object
 
 ; The sampling_period should be 2 * base_period, where base_period is from settings.xml.
 !def sampling_period 100ms
@@ -64,6 +65,7 @@ cam_position:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 cam_position_x:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 cam_position_y:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 cam_position_z:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
+approximate_pos:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 size:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 pos_rot:(ont 1) [[SYNC_ONCE now 0 forever root nil]]
 cam_obj:(ont 1) [[SYNC_ONCE now 0 forever root nil]]

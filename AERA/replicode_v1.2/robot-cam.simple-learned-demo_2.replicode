@@ -27,7 +27,7 @@ co3_is_a_cam_obj:(mk.val co3 essence cam_obj 1) |[]
 
 ; Hand H has position P and is holding.
 S0:(cst [] []
-   (fact (mk.val H: essence hand :) T0: T1: : :); Changed X to hand.
+   (fact (mk.val H: essence hand :) T0: T1: : :)
    (fact (mk.val H: position P: :) T0: T1: : :)
 |[]
 |[]
@@ -56,6 +56,15 @@ S2:(cst [] []
    (fact (mk.val C: essence cam_obj :) T0: T1: : :)
    (fact (mk.val C: position CP: :) T0: T1: : :)
    (fact (mk.val H: holding [C:] :) T0: T1: : :)
+   ; (fact (mk.val C: approximate_pos AP: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S4:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val H: holding [C:] :) T0: T1: : :)
+   (fact (mk.val C: approximate_pos P: :) T0: T1: : :)
 |[]
 |[]
 [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
@@ -134,6 +143,59 @@ M5:(mdl [] []
 |[]
 [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
 
+; Release moves cube approximate_pos down (to -140)
+
+M10:(mdl [H: C: (vec4 AP_x: AP_y: AP_z: AP_w:) (ti T0: T1:)] []
+   (fact (cmd release [H:] :) MT0: MT1: : :)
+   (fact (mk.val C: approximate_pos (vec4 AP_x: AP_y: -140 AP_w:) :) RT0: RT1: : :)
+[]
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M11:(mdl [] []
+   (fact (icst S2 [] [H: P: C: CP:] : :) T0: T1: : :)
+   (fact (imdl M10 [H: C: (vec4 0 0 0 0) (ti T0: T1:)] [RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Move while holding moves the cube
+
+M8:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) C: (ti T0: T1:)] []
+   (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
+   (fact (mk.val C: approximate_pos (vec4 M_x: M_y: M_z: M_w:) :) RT0: RT1: : :)
+[]
+   M_x:(+ P_x DeltaX)
+   M_y:(+ P_y DeltaY)
+   M_z:(+ P_z DeltaZ)
+   M_w:(+ P_w DeltaW)
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   (<> (vec4 P_x P_y P_z P_w) (vec4 M_x M_y M_z M_w))
+   DeltaX:(sub M_x P_x)
+   DeltaY:(sub M_y P_y)
+   DeltaZ:(sub M_z P_z)
+   DeltaW:(sub M_w P_w)
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M9:(mdl [] []
+   (fact (icst S4 [] [H: C: P:] : :) T0: T1: : :)
+   (fact (imdl M8 [H: P: C: (ti T0: T1:)] [M_x: M_y: M_z: M_w: DeltaX: DeltaY: DeltaZ: DeltaW: RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
 ; Relation between camera object coordinates and hand coordiantes
 
 ; S4:(cst [] []
@@ -179,7 +241,7 @@ start:(pgm [] [] [] []
 ; The drive models
 
 m_drive:(mdl [] []
-   (fact (mk.val h position (vec4 290 0 0 45) 1) T0: T1: 1 1)
+   (fact (mk.val co1 approximate_pos (vec4 20 140 0 45) 1) T0: T1: 1 1)
    (fact run T0: T1: ::)
 |[]
 |[]
@@ -220,10 +282,10 @@ pgm_inject_drive_pass1:(pgm [] []
    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
 []
    (>= After (+ this.vw.ijt 100ms))
-   (<= After (+ this.vw.ijt 400ms))
+   (<= After (+ this.vw.ijt 600ms))
 []
    ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run2 After (+ Before 300ms) 1 1) []])
+   (inj [F_run:(fact run After (+ Before 500ms) 1 1) []])
    (inj [G:(goal F_run self nil 1) []])
    (inj []
       ; Delay a little to allow predictions for this sampling period before injecting the drive.
@@ -255,65 +317,65 @@ pgm_inject_drive_pass1:(pgm [] []
 ; (ipgm pgm_inject_drive_pass2 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
 ;    [SYNC_ONCE now 0 forever primary nil 1]
 
-pgm_inject_drive_pass3:(pgm [] []
-   ; This fact repeats periodically. We use it as a "heartbeat".
-   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
-[]
-   (>= After (+ this.vw.ijt 400ms))
-   (<= After (+ this.vw.ijt 500ms))
-[]
-   ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run3 After (+ Before 100ms) 1 1) []])
-   (inj [G:(goal F_run self nil 1) []])
-   (inj []
-      ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
-      [SYNC_ONCE T0 1 forever primary nil]
-   )
-   (prb [1 "print" "injected drive 3" []])
-1) |[]
-(ipgm pgm_inject_drive_pass3 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
-   [SYNC_ONCE now 0 forever primary nil 1]
-
-pgm_inject_drive_pass4:(pgm [] []
-   ; This fact repeats periodically. We use it as a "heartbeat".
-   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
-[]
-   (>= After (+ this.vw.ijt 500ms))
-   (<= After (+ this.vw.ijt 600ms))
-[]
-   ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run4 After (+ Before 100ms) 1 1) []])
-   (inj [G:(goal F_run self nil 1) []])
-   (inj []
-      ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
-      [SYNC_ONCE T0 1 forever primary nil]
-   )
-   (prb [1 "print" "injected drive 4" []])
-1) |[]
-(ipgm pgm_inject_drive_pass4 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
-   [SYNC_ONCE now 0 forever primary nil 1]
-
-
-pgm_inject_drive_pass5:(pgm [] []
-   ; This fact repeats periodically. We use it as a "heartbeat".
-   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
-[]
-   (>= After (+ this.vw.ijt 600ms))
-[]
-   ; The end of the time interval will be used in m_drive as the end of the goal interval.
-   (inj [F_run:(fact run5 After (+ Before 100ms) 1 1) []])
-   (inj [G:(goal F_run self nil 1) []])
-   (inj []
-      ; Delay a little to allow predictions for this sampling period before injecting the drive.
-      (fact G T0:(+ After 10ms) T0 1 1)
-      [SYNC_ONCE T0 1 forever primary nil]
-   )
-   (prb [1 "print" "injected drive 5" []])
-1) |[]
-(ipgm pgm_inject_drive_pass5 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
-   [SYNC_ONCE now 0 forever primary nil 1]
+; pgm_inject_drive_pass3:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 400ms))
+;    (<= After (+ this.vw.ijt 500ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run3 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 3" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass3 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+; 
+; pgm_inject_drive_pass4:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 500ms))
+;    (<= After (+ this.vw.ijt 600ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run4 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 4" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass4 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+; 
+; 
+; pgm_inject_drive_pass5:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 600ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run5 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 5" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass5 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
