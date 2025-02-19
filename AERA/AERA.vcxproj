@@ -277,6 +277,8 @@
     <Content Include="replicode_v1.2\robot-cam-demo.replicode" />
     <Content Include="replicode_v1.2\robot-cam-demo.tests.replicode" />
     <Content Include="replicode_v1.2\robot-cam.simple-learned-demo.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.advanced-learned-demo.working.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.simple-learned-demo_2.replicode" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

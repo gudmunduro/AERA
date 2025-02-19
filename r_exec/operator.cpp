@@ -425,6 +425,10 @@ bool add(const Context &context) {
         return true;
       }
     }
+    else if (rhs[0].getDescriptor() == Atom::OBJECT && rhs[0].asOpcode() == 45) {
+      context.setAtomicResult(Atom::Float(lhs[0].asFloat() + rhs[1].asFloat()));
+      return true;
+    }
   } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
     if (rhs[0].isFloat()) {
@@ -455,6 +459,10 @@ bool add(const Context &context) {
         return true;
       }
     }
+  }
+  else if (lhs[0].getDescriptor() == Atom::OBJECT && lhs[0].asOpcode() == 45) {
+    context.setAtomicResult(Atom::Float(lhs[1].asFloat() + rhs[0].asFloat()));
+    return true;
   }
 
   context.setAtomicResult(Atom::Nil());
@@ -487,6 +495,13 @@ bool sub(const Context &context) {
       context.setAtomicResult(Atom::Float(lhs[0].asFloat() - rhs[0].asFloat()));
       return true;
     }
+    if (rhs[0].getDescriptor() == Atom::OBJECT && rhs[0].asOpcode() == 45) {
+      //context.setAtomicResult(Atom::Float(lhs[0].asFloat() - rhs[1].asFloat()));
+      context.setCompoundResultHead(Atom::Object(45, 2));
+      context.addCompoundResultPart(Atom::Float(lhs[1].asFloat() - rhs[0].asFloat()));
+      context.addCompoundResultPart(Atom::Float(lhs[2].asFloat()));
+      return true;
+    }
   } else if (lhs[0].getDescriptor() == Atom::TIMESTAMP) {
 
     if (rhs[0].getDescriptor() == Atom::TIMESTAMP) {
@@ -517,6 +532,13 @@ bool sub(const Context &context) {
         return true;
       }
     }
+  }
+  else if (lhs[0].getDescriptor() == Atom::OBJECT && lhs[0].asOpcode() == 45) {
+    //context.setAtomicResult(Atom::Float(lhs[1].asFloat() - rhs[0].asFloat()));
+    context.setCompoundResultHead(Atom::Object(45, 2));
+    context.addCompoundResultPart(Atom::Float(lhs[1].asFloat() - rhs[0].asFloat()));
+    context.addCompoundResultPart(Atom::Float(lhs[2].asFloat()));
+    return true;
   }
 
   context.setAtomicResult(Atom::Nil());

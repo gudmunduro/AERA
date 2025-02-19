@@ -269,6 +269,15 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
   uint8 lhs_descriptor = lhs_atom.getDescriptor();
   uint8 rhs_descriptor = rhs_atom.getDescriptor();
 
+  if (lhs_atom.isFloat() && Utils::Equal(lhs_atom.asFloat(), 290.0) && lhs->get_reference(0)->get_oid() == 75)
+  {
+    std::cout << "Lhs is 290" << std::endl;
+  }
+  if (rhs_atom.isFloat() && Utils::Equal(rhs_atom.asFloat(), 290.0) && rhs->get_reference(0)->get_oid() == 75)
+  {
+    std::cout << "Lhs is 290" << std::endl;
+  }
+
   if (same_binding_state) {
     if (lhs_descriptor == Atom::T_WILDCARD || lhs_descriptor == Atom::WILDCARD ||
         rhs_descriptor == Atom::T_WILDCARD || rhs_descriptor == Atom::WILDCARD) {
@@ -299,6 +308,10 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
     case Atom::VL_PTR:
       break;
     default:
+      if (rhs_atom.isFloat()) {
+        if (Match(lhs, lhs_base_index, lhs_atom.asIndex(), rhs, rhs_index, lhs_atom.asIndex() + 2, same_binding_state))
+          break;
+      }
       return false;
     }
     break;
@@ -316,12 +329,94 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
       return false;
     }
     break;
+  case Atom::OBJECT:
+      if (lhs_atom.asOpcode() == 45 && rhs_atom.isFloat())
+      {
+        float rhs_value = rhs_atom.asFloat();
+        float mean = lhs->code(lhs_index+1).asFloat();
+        float std = lhs->code(lhs_index+2).asFloat();
+
+        if (lhs->code(lhs_index+1).getDescriptor() == Atom::WILDCARD)
+        {
+          std::cout << "Lhs mean is wildcard" << std::endl;
+        }
+        if (lhs->code(lhs_index+1).getDescriptor() == Atom::T_WILDCARD)
+        {
+          std::cout << "Lhs mean is T wildcard" << std::endl;
+        }
+
+        std::cout << "Comparing rhs " << rhs_value << " to mean " << mean << " with std " << std << std::endl;
+        if (Utils::ProbabilityDensity(rhs_value, mean, std) < 0.001)
+        {
+          std::cout << "Not match" << std::endl;
+          return false;
+        }
+        std::cout << "Match" << std::endl;
+
+        // The uncertainty object uses 3 atoms, so we increment by 2 in addition to the 1 at the bottom
+        lhs_index += 2;
+        break;
+      }
+    // Compare two uncertainty objects
+    if (rhs_descriptor == Atom::OBJECT && lhs_atom.asOpcode() == 45 && rhs_atom.asOpcode() == 45)
+    {
+      float lhs_mean = lhs->code(lhs_index+1).asFloat();
+      float lhs_std = lhs->code(lhs_index+2).asFloat();
+      float rhs_mean = rhs->code(rhs_index+1).asFloat();
+      float rhs_std = rhs->code(rhs_index+2).asFloat();
+      float std = max(lhs_std, rhs_std);
+      if (Utils::ProbabilityDensity(lhs_mean, rhs_mean, std) < 0.001)
+      {
+        return false;
+      }
+
+      lhs_index += 2;
+      rhs_index += 2;
+      break;
+    }
   default:
     switch (rhs_descriptor) {
     case Atom::T_WILDCARD:
     case Atom::WILDCARD:
     case Atom::VL_PTR:
       break;
+    case Atom::I_PTR:
+      if (lhs_atom.isFloat())
+      {
+        if (!Match(lhs, lhs_base_index, lhs_index, rhs, rhs_atom.asIndex(), lhs_index, same_binding_state))
+          return false;
+        break;
+      }
+    case Atom::OBJECT:
+      // TODO: Switch to using opcode name " GetOpcodeName((uint16) rhs_atom.asOpcode()).c_str() == "uncertain" "
+      if (lhs_atom.isFloat() && rhs_atom.asOpcode() == 45)
+      {
+        float lhs_value = lhs_atom.asFloat();
+        float mean = rhs->code(rhs_index+1).asFloat();
+        float std = rhs->code(rhs_index+2).asFloat();
+
+        if (rhs->code(rhs_index+1).getDescriptor() == Atom::WILDCARD)
+        {
+          std::cout << "Rhs mean is wildcard" << std::endl;
+        }
+        if (rhs->code(rhs_index+1).getDescriptor() == Atom::T_WILDCARD)
+        {
+          std::cout << "Rhs mean is T wildcard" << std::endl;
+        }
+
+        // Is lhs under the curve at all
+        std::cout << "Comparing lhs " << lhs_value << " to mean " << mean << " with std " << std << std::endl;
+        if (Utils::ProbabilityDensity(lhs_value, mean, std) < 0.001)
+        {
+          std::cout << "Not match" << std::endl;
+          return false;
+        }
+        std::cout << "Match" << std::endl;
+
+        // The uncertainty object uses 3 atoms, so we increment by 2 in addition to the 1 at the bottom
+        rhs_index += 2;
+        break;
+      }
     default:
       if (!MatchAtom(lhs_atom, rhs_atom))
         return false;
@@ -348,6 +443,15 @@ bool _Fact::MatchAtom(Atom lhs, Atom rhs) {
 
 bool _Fact::MatchStructure(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, const Code *rhs, uint16 rhs_index, bool same_binding_state) {
 
+  if (lhs->references_size() == 2 && lhs->get_reference(0)->get_oid() == 75 && lhs->get_reference(1)->get_oid() == 22 && !Utils::Equal(lhs->code(6).asFloat(), 240.0))
+  {
+    std::cout << "Lhs is mk.val h position " << lhs->code(6).asFloat() << ", " <<  lhs->code(7).asFloat() << ", " <<  lhs->code(8).asFloat() << std::endl;
+  }
+  if (rhs->references_size() == 2 && rhs->get_reference(0)->get_oid() == 75 && rhs->get_reference(1)->get_oid() == 22 && !Utils::Equal(rhs->code(6).asFloat(), 240.0))
+  {
+    std::cout << "Rhs is mk.val h position " << rhs->code(6).asFloat() << ", " <<  rhs->code(7).asFloat() << ", " <<  rhs->code(8).asFloat() << std::endl;
+  }
+  
   uint16 lhs_full_index = lhs_base_index + lhs_index;
   Atom lhs_atom = lhs->code(lhs_full_index);
   Atom rhs_atom = rhs->code(rhs_index);
@@ -362,7 +466,15 @@ bool _Fact::MatchStructure(const Code *lhs, uint16 lhs_base_index, uint16 lhs_in
 }
 
 bool _Fact::MatchObject(const Code *lhs, const Code *rhs, bool same_binding_state) {
-
+  if (lhs->references_size() == 2 && lhs->get_reference(0)->get_oid() == 75 && lhs->get_reference(1)->get_oid() == 22 && !Utils::Equal(lhs->code(6).asFloat(), 240.0))
+  {
+    std::cout << "Lhs is mk.val h position " << lhs->code(6).asFloat() << ", " <<  lhs->code(7).asFloat() << ", " <<  lhs->code(8).asFloat() << std::endl;
+  }
+  if (rhs->references_size() == 2 && rhs->get_reference(0)->get_oid() == 75 && rhs->get_reference(1)->get_oid() == 22 && !Utils::Equal(rhs->code(6).asFloat(), 240.0))
+  {
+    std::cout << "Rhs is mk.val h position " << rhs->code(6).asFloat() << ", " <<  rhs->code(7).asFloat() << ", " <<  rhs->code(8).asFloat() << std::endl;
+  }
+  
   if (lhs->code(0) != rhs->code(0))
     return false;
   uint16 lhs_opcode = lhs->code(0).asOpcode();

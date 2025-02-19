@@ -7,7 +7,7 @@
   <Load
     usr_operator_path="./usr_operators.dll"
     usr_class_path="../AERA/replicode_v1.2/user.classes.replicode"
-    source_file_name="../AERA/replicode_v1.2/external-cmd.replicode"
+    source_file_name="../AERA/replicode_v1.2/robot-cam.advanced-learned-demo.working.replicode"
   />
   <!--Init is set to diagnostic time by default. 
       For real time, set reduction_core_count to "6" and time_core_count to "2" . -->
@@ -30,7 +30,7 @@
     primary_thz="3600000"
     secondary_thz="7200000"
   />
-  <Debug debug="yes" run_time="10000" debug_windows="1" runtime_output_file_path="runtime_out.txt" trace_levels="FFFF">
+  <Debug debug="yes" run_time="1400" debug_windows="1" runtime_output_file_path="runtime_out.txt" trace_levels="FFFF">
     <Resilience
       ntf_mk_resilience="1"
       goal_pred_success_resilience="1000"
@@ -47,7 +47,7 @@
       test_objects="no"
     />
   </Debug>
-  <Run run_time="10000" probe_level="2">
+  <Run run_time="210" probe_level="2">
     <Models
       get_models="yes"
       decompile_models="yes"

@@ -1,0 +1,409 @@
+; Simple demo using a real robot with AERA
+
+small:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+large:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+
+h:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+h_is_a_hand:(mk.val h essence hand 1) |[]
+(fact h_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+c:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+c_is_a_camera:(mk.val c essence camera 1) |[]
+(fact c_is_a_camera 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+; Camera objects
+co1:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co1_is_a_cam_obj:(mk.val co1 essence cam_obj 1) |[]
+(fact co1_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co2:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co2_is_a_cam_obj:(mk.val co2 essence cam_obj 1) |[]
+(fact co2_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co3:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co3_is_a_cam_obj:(mk.val co3 essence cam_obj 1) |[]
+(fact co3_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+
+; Hand H has position P and is holding.
+S0:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val H: position P: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S3:(cst [] []
+   (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+   (fact (mk.val C: position P: :) T0: T1: : :)
+   (fact (mk.val C: obj_type [0] :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S1:(cst [] []
+   (fact (icst S0 [] [H: P:] : :) T0: T1: : :)
+   (fact (icst S3 [] [C: CP:] : :) T0: T1: : :)
+   (fact (mk.val H: holding [] :) T0: T1: : :)
+   (fact (mk.val C: approximate_pos (vec4 GP_x: GP_y: GP_z: GP_w:) :) T0: T1: : :)
+   (fact (mk.val H: position (vec4 GP_x: GP_y: 0 GP_w:) :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S2:(cst [] []
+   (fact (icst S0 [] [H: P:] : :) T0: T1: : :)
+   (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+   (fact (mk.val C: position CP: :) T0: T1: : :)
+   (fact (mk.val H: holding [C:] :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S4:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val H: holding [C:] :) T0: T1: : :)
+   (fact (mk.val C: approximate_pos P: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; The knowledge models
+
+; Move models
+M0:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] []
+   (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
+   (fact (mk.val H: position (vec4 (uncertain M_x: 0.35) (uncertain M_y: 0.34) (uncertain M_z: 0.33) (uncertain M_w: 0.32)) :) RT0: RT1: : :)
+[]
+   M_x:(+ P_x DeltaX)
+   M_y:(+ P_y DeltaY)
+   M_z:(+ P_z DeltaZ)
+   M_w:(+ P_w DeltaW)
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   (<> (vec4 P_x P_y P_z P_w) (vec4 M_x M_y M_z M_w))
+   DeltaX:(sub M_x P_x)
+   DeltaY:(sub M_y P_y)
+   DeltaZ:(sub M_z P_z)
+   DeltaW:(sub M_w P_w)
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M1:(mdl [] []
+   (fact (icst S0 [] [H: (vec4 P_x: P_y: P_z: P_w:)] : :) T0: T1: : :)
+   (fact (imdl M0 [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] [M_x: M_y: M_z: M_w: DeltaX: DeltaY: DeltaZ: DeltaW: RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Grab models
+M2:(mdl [H: C: (ti T0: T1:)] []
+   (fact (cmd grab [H:] :) MT0: MT1: : :)
+   (fact (mk.val H: holding [C:] :) RT0: RT1: : :)
+[]
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M3:(mdl [] []
+   (fact (icst S1 [] [H: P: C: CP: GP_x: GP_y: GP_z: GP_w:] : :) T0: T1: : :)
+   (fact (imdl M2 [H: C: (ti T0: T1:)] [RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Release models
+M4:(mdl [H: C: (ti T0: T1:)] []
+   (fact (cmd release [H:] :) MT0: MT1: : :)
+   (fact (mk.val H: holding [] :) RT0: RT1: : :)
+[]
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M5:(mdl [] []
+   (fact (icst S2 [] [H: P: C: CP:] : :) T0: T1: : :)
+   (fact (imdl M4 [H: C: (ti T0: T1:)] [RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Move while holding moves the cube
+
+M8:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) C: (ti T0: T1:)] []
+   (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
+   (fact (mk.val C: approximate_pos (vec4 (uncertain M_x: 0.1) (uncertain M_y: 0.1) (uncertain M_z: 0.1) (uncertain M_w: 0.1)) :) RT0: RT1: : :)
+[]
+   M_x:(+ P_x DeltaX)
+   M_y:(+ P_y DeltaY)
+   M_z:(+ P_z DeltaZ)
+   M_w:(+ P_w DeltaW)
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   (<> (vec4 P_x P_y P_z P_w) (vec4 M_x M_y M_z M_w))
+   DeltaX:(sub M_x P_x)
+   DeltaY:(sub M_y P_y)
+   DeltaZ:(sub M_z P_z)
+   DeltaW:(sub M_w P_w)
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M9:(mdl [] []
+   (fact (icst S4 [] [H: C: P:] : :) T0: T1: : :)
+   (fact (imdl M8 [H: P: C: (ti T0: T1:)] [M_x: M_y: M_z: M_w: DeltaX: DeltaY: DeltaZ: DeltaW: RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Relation between camera object coordinates and hand coordiantes
+
+; S4:(cst [] []
+;    (fact (mk.val H: essence hand :) T0: T1: : :)
+;    (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+;    (fact (mk.val C: position P: :) T0: T1: : :)
+;    (fact (mk.val C: obj_type [0] :) T0: T1: : :)
+; |[]
+; |[]
+; [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+;
+; M6:(mdl [H: C: (vec2 Cx: Cy:) (ti T0: T1:)] []
+;    (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
+;    (fact (mk.val C: position (vec2 NCx: NCy:) :) RT0: RT1: : :)
+; []
+;    NCx:(add Cx (mul DeltaY 1.175))
+;    NCy:(add Cy DeltaX)
+;    RT0:(add T0 100ms)
+;    RT1:(add T1 100ms)
+; []
+;    DeltaX:(div (sub NCx Cx) 1.175)
+;    DeltaY:(sub NCy Cy)
+;    MT0:(sub RT0 80ms)
+;    MT1:(sub RT1 100ms)
+;    T0:(sub RT0 100ms)
+;    T1:(sub RT1 100ms)
+; [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+;
+; M7:(mdl [] []
+;    (fact (icst S4 [] [H: C: CP:] : :) T0: T1: : :)
+;    (fact (imdl M6 [H: C: CP: (ti T0: T1:)] [NCx: NCy: RT0: RT1:] : :) T0: T1: : :)
+; |[]
+; |[]
+; [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Start
+
+start:(pgm [] [] [] []
+   (cmd ready ["robot-cam.learned-demo"] 1)
+1) |[]
+(ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+; The drive models
+
+m_drive:(mdl [] []
+   (fact (mk.val co1 approximate_pos (vec4 (uncertain 20 0.1) (uncertain 140 0.1) (uncertain 0 0.1) (uncertain 45 0.1)) 1) T0: T1: 1 1)
+   (fact run T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive2:(mdl [] []
+   (fact (mk.val h holding [co1] 1) T0: T1: 1 1)
+   (fact run2 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive3:(mdl [] []
+   (fact (mk.val h position (vec4 320 -140 -50 45) 1) T0: T1: 1 1)
+   (fact run3 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive4:(mdl [] []
+   (fact (mk.val h holding [] 1) T0: T1: 1 1)
+   (fact run4 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive5:(mdl [] []
+   (fact (mk.val h position (vec4 260 20 -15 45) 1) T0: T1: 1 1)
+   (fact run5 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Inject drives
+
+pgm_inject_drive_pass1:(pgm [] []
+   ; This fact repeats periodically. We use it as a "heartbeat".
+   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+[]
+   (>= After (+ this.vw.ijt 100ms))
+   (<= After (+ this.vw.ijt 600ms))
+[]
+   ; The end of the time interval will be used in m_drive as the end of the goal interval.
+   (inj [F_run:(fact run After (+ Before 500ms) 1 1) []])
+   (inj [G:(goal F_run self nil 1) []])
+   (inj []
+      ; Delay a little to allow predictions for this sampling period before injecting the drive.
+      (fact G T0:(+ After 10ms) T0 1 1)
+      [SYNC_ONCE T0 1 forever primary nil]
+   )
+   (prb [1 "print" "injected drive 1" []])
+1) |[]
+(ipgm pgm_inject_drive_pass1 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; pgm_inject_drive_pass2:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 200ms))
+;    (< After (+ this.vw.ijt 300ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run2 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 2" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass2 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+
+; pgm_inject_drive_pass3:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 400ms))
+;    (<= After (+ this.vw.ijt 500ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run3 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 3" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass3 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+; 
+; pgm_inject_drive_pass4:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 500ms))
+;    (<= After (+ this.vw.ijt 600ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run4 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 4" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass4 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+; 
+; 
+; pgm_inject_drive_pass5:(pgm [] []
+;    ; This fact repeats periodically. We use it as a "heartbeat".
+;    (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+; []
+;    (>= After (+ this.vw.ijt 600ms))
+; []
+;    ; The end of the time interval will be used in m_drive as the end of the goal interval.
+;    (inj [F_run:(fact run5 After (+ Before 100ms) 1 1) []])
+;    (inj [G:(goal F_run self nil 1) []])
+;    (inj []
+;       ; Delay a little to allow predictions for this sampling period before injecting the drive.
+;       (fact G T0:(+ After 10ms) T0 1 1)
+;       [SYNC_ONCE T0 1 forever primary nil]
+;    )
+;    (prb [1 "print" "injected drive 5" []])
+; 1) |[]
+; (ipgm pgm_inject_drive_pass5 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+;    [SYNC_ONCE now 0 forever primary nil 1]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; Command to move the robot
+pgm_eject_cmd_mov_j:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd mov_j [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd mov_j [H P] 1)
+1) |[]
+(ipgm pgm_eject_cmd_mov_j [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to move the robot by relative coordinates
+pgm_eject_cmd_move:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd move [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd move [H P] 1)
+   (prb [1 "print" "Ejected move command" []])
+1) |[]
+(ipgm pgm_eject_cmd_move [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to grab
+pgm_eject_cmd_grab:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd grab [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd grab [H] 1)
+   (prb [1 "print" "Ejected grab command" []])
+1) |[]
+(ipgm pgm_eject_cmd_grab [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to release
+pgm_eject_cmd_release:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd release [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd release [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_release [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]

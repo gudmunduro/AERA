@@ -351,6 +351,8 @@ public:
    * \return True if the element has a reference.
    */
   static bool has_reference(const Atom* code, uint16 index);
+
+  static float ProbabilityDensity(float expected, float mean, float std);
 };
 
 // This is Timestamp::max() duration_cast to microseconds and used to initialize a Timestamp.

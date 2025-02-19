@@ -207,3 +207,6 @@ run2:(ent 1) [[SYNC_ONCE now 0 forever root nil]]
 run3:(ent 1) [[SYNC_ONCE now 0 forever root nil]]
 run4:(ent 1) [[SYNC_ONCE now 0 forever root nil]]
 run5:(ent 1) [[SYNC_ONCE now 0 forever root nil]]
+
+; Uncertainty
+!class (uncertain m:nb s:nb)

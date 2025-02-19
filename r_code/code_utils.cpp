@@ -85,6 +85,7 @@
 #include "../submodules/CoreLibrary/CoreLibrary/utils.h"
 #include "object.h"
 
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 using namespace std;
@@ -280,4 +281,7 @@ bool Utils::has_reference(const Atom* code, uint16 index) {
   }
 }
 
+float Utils::ProbabilityDensity(float expected, float mean, float std) {
+  return 1.0f / (mean * std::sqrtf(2.0f * M_PI)) * std::powf(M_E, (-1.0f / 2.0f) * std::powf((expected - mean) / std, 2.0f));
+}
 }

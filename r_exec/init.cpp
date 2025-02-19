@@ -83,6 +83,9 @@
 //_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
 
 #include "init.h"
+
+#include <iomanip>
+
 #include "object.h"
 #include "operator.h"
 #include "cpp_programs.h"
@@ -423,6 +426,42 @@ bool InitOpcodes(const r_comp::Metadata& metadata) {
   Opcodes::MkActChg = _Opcodes.find("mk.act_chg")->second;
 
   Opcodes::Sim = _Opcodes.find("sim")->second;
+
+  const int name_width = 50;
+  const int number_width = 8;
+
+  std::unordered_map<core::uint16, std::string> opcodes_for_printing;
+  std::vector<core::uint16> order;
+  core::uint16 i = 0;
+  int counter = 0;
+  while (i <= 0xFFFF) {
+    if (opcode_names.find(i) == opcode_names.end()) {
+      ++i;
+      continue;
+    }
+    order.push_back(i);
+    std::string print_str = "";
+    for (auto it = opcode_names[i].begin(); it != opcode_names[i].end(); ++it) {
+      if (it != opcode_names[i].begin()) {
+        print_str += ", ";
+      }
+      print_str += *it;
+    }
+    opcodes_for_printing[i] = print_str;
+    ++i;
+    ++counter;
+    if (counter >= opcode_names.size())
+      break;
+  }
+
+  std::cout << "The following Opcode were initialized: " << std::endl;
+  for (auto it = order.begin(); it != order.end(); ++it) {
+    std::cout << std::left << std::setw(number_width) << std::setfill(' ') << "  " + std::to_string(*it) << "  |";
+    std::cout << std::left << std::setw(name_width) << std::setfill(' ') << "   " + opcodes_for_printing[*it];
+    std::cout << std::endl;
+    std::cout << std::left << std::setw(name_width + number_width + 5) << std::setfill('-') << "";
+    std::cout << std::endl;
+  }
 
   // load executive function Opcodes.
   Opcodes::Inject = _Opcodes.find("_inj")->second;
