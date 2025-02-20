@@ -574,10 +574,10 @@ bool DiagnosticTimeState::step() {
       if (reduction_job_queue_index_ < n_jobs_to_run) {
         // Add breakpoint here to check which reduction job leads to the failure.
         //std::cout << "Job id " << reduction_job_queue_[reduction_job_queue_index_]->get_job_id() << std::endl;
-        if (reduction_job_queue_[reduction_job_queue_index_]->get_job_id() == 21966)
+        if (reduction_job_queue_[reduction_job_queue_index_]->get_job_id() == 1009)
         {
         //  return false;
-        //  //std::cout << "Reched job" << std::endl;
+          std::cout << "Reched job" << std::endl;
         }
         reduction_job_queue_[reduction_job_queue_index_]->update(Now());
         reduction_job_queue_[reduction_job_queue_index_] = NULL;

@@ -705,6 +705,49 @@ bool BindingMap::match(const Code *object, uint16 o_base_index, uint16 o_index, 
     case Atom::WILDCARD:
       break;
     default:
+      if (p_atom.getDescriptor() == Atom::I_PTR && o_atom.isFloat())
+      {
+        if (!match(object, o_base_index, o_index, pattern, p_atom.asIndex(), o_index))
+          return false;
+        break;
+      }
+
+      if (p_atom.getDescriptor() == Atom::OBJECT && o_atom.isFloat() && p_atom.asOpcode() == 45)
+      {
+        float o_value = o_atom.asFloat();
+        const auto &mean_a = pattern->code(p_index+1);
+        // Std is expected to always have a value
+        float std = pattern->code(p_index+2).asFloat();
+
+        if (mean_a.getDescriptor() == Atom::VL_PTR)
+        {
+          const auto mean_value = map_[mean_a.asIndex()]->get_code();
+
+          if (mean_value != nullptr)
+          {
+            if (!mean_value->isFloat() || Utils::ProbabilityDensity(o_value, mean_value->asFloat(), std) < 0.001)
+            {
+              return false;
+            }
+          }
+          else
+          {
+            bind_variable(new AtomValue(this, Atom::Float(o_value)), mean_a.asIndex());
+          }
+        }
+        else if (mean_a.isFloat())
+        {
+          if (Utils::ProbabilityDensity(o_value, mean_a.asFloat(), std) < 0.001)
+          {
+            return false;
+          }
+        }
+
+        // The uncertainty object uses 3 atoms, so we increment by 2 in addition to the 1 at the bottom
+        p_index += 2;
+        break;
+      }
+      
       if (!match_atom(o_atom, p_atom))
         return false;
       break;
