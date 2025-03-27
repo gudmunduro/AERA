@@ -662,6 +662,13 @@ bool BindingMap::match(const Code *object, uint16 o_base_index, uint16 o_index, 
   case Atom::VL_PTR:
     break;
   case Atom::I_PTR:
+    if (object->code(o_atom.asIndex()).getDescriptor() == Atom::OBJECT && object->code(o_atom.asIndex()).asOpcode() == 45 && (p_atom.isFloat() || p_atom.getDescriptor() == Atom::VL_PTR))
+    {
+      if (!match(object, o_atom.asIndex(), 0, pattern, p_index, 2))
+        return false;
+      break;
+    }
+    
     switch (p_atom.getDescriptor()) {
     case Atom::VL_PTR:
       if (!map_[p_atom.asIndex()]->match(object, o_full_index))
@@ -696,6 +703,26 @@ bool BindingMap::match(const Code *object, uint16 o_base_index, uint16 o_index, 
     }
     break;
   default:
+    if (o_atom.getDescriptor() == Atom::OBJECT && o_atom.asOpcode() == 45 && (p_atom.isFloat() || p_atom.getDescriptor() == Atom::VL_PTR))
+    {
+      float mean_value = object->code(o_full_index + 1).asFloat();
+      float std_value = object->code(o_full_index + 2).asFloat();
+      if (p_atom.isFloat())
+      {
+        if (Utils::ProbabilityDensity(p_atom.asFloat(), mean_value, std_value) < 0.001)
+        {
+          return false;
+        }
+      }
+      else
+      {
+        bind_variable(new AtomValue(this, Atom::Float(mean_value)), p_atom.asIndex());
+      }
+      o_index += 2;
+      
+      break;
+    }
+    
     switch (p_atom.getDescriptor()) {
     case Atom::VL_PTR:
       if (!map_[p_atom.asIndex()]->match(object, o_full_index))
@@ -712,10 +739,10 @@ bool BindingMap::match(const Code *object, uint16 o_base_index, uint16 o_index, 
         break;
       }
 
-      if (p_atom.getDescriptor() == Atom::OBJECT && o_atom.isFloat() && p_atom.asOpcode() == 45)
+      if (p_atom.getDescriptor() == Atom::OBJECT && p_atom.asOpcode() == 45 && o_atom.isFloat())
       {
         float o_value = o_atom.asFloat();
-        const auto &mean_a = pattern->code(p_index+1);
+        const auto &mean_a = pattern->code(p_index + 1);
         // Std is expected to always have a value
         float std = pattern->code(p_index+2).asFloat();
 
@@ -907,6 +934,10 @@ bool BindingMap::match_object(const Code *object, const Code *pattern) {
 }
 
 void BindingMap::bind_variable(BoundValue *value, uint8 id) {
+  /*if (map_.size() <= id)
+  {
+    add_unbound_value(id);
+  }*/
 
   map_[id] = value;
 }
@@ -1003,7 +1034,14 @@ HLPBindingMap &HLPBindingMap::operator =(const HLPBindingMap &source) {
 
   clear();
   for (uint8 i = 0; i < source.map_.size(); ++i)
-    map_.push_back(source.map_[i]->copy(this));
+  {
+    auto s = source.map_[i];
+    if (s == NULL)
+    {
+      s = new UnboundValue(this, i);
+    }
+    map_.push_back(s->copy(this));
+  }
   first_index_ = source.first_index_;
   fwd_after_index_ = source.fwd_after_index_;
   fwd_before_index_ = source.fwd_before_index_;

@@ -300,7 +300,7 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
       break;
     default:
       if (rhs_atom.isFloat()) {
-        if (Match(lhs, lhs_base_index, lhs_atom.asIndex(), rhs, rhs_index, lhs_atom.asIndex() + 2, same_binding_state))
+        if (Match(lhs, lhs_atom.asIndex(), 0, rhs, rhs_index, 2, same_binding_state))
           break;
       }
       return false;
@@ -324,8 +324,8 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
       if (lhs_atom.asOpcode() == 45 && rhs_atom.isFloat())
       {
         float rhs_value = rhs_atom.asFloat();
-        float mean = lhs->code(lhs_index+1).asFloat();
-        float std = lhs->code(lhs_index+2).asFloat();
+        float mean = lhs->code(lhs_full_index+1).asFloat();
+        float std = lhs->code(lhs_full_index+2).asFloat();
 
         if (Utils::ProbabilityDensity(rhs_value, mean, std) < 0.001)
         {
@@ -339,11 +339,12 @@ bool _Fact::Match(const Code *lhs, uint16 lhs_base_index, uint16 lhs_index, cons
     // Compare two uncertainty objects
     if (rhs_descriptor == Atom::OBJECT && lhs_atom.asOpcode() == 45 && rhs_atom.asOpcode() == 45)
     {
-      float lhs_mean = lhs->code(lhs_index+1).asFloat();
-      float lhs_std = lhs->code(lhs_index+2).asFloat();
+      float lhs_mean = lhs->code(lhs_full_index+1).asFloat();
+      float lhs_std = lhs->code(lhs_full_index+2).asFloat();
       float rhs_mean = rhs->code(rhs_index+1).asFloat();
       float rhs_std = rhs->code(rhs_index+2).asFloat();
       float std = max(lhs_std, rhs_std);
+      
       if (Utils::ProbabilityDensity(lhs_mean, rhs_mean, std) < 0.001)
       {
         return false;

@@ -1,0 +1,381 @@
+; Simple demo using a real robot with AERA
+
+small:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+large:(ont 1) [[SYNC_ONCE now 1 forever root nil]]
+
+h:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+h_is_a_hand:(mk.val h essence hand 1) |[]
+(fact h_is_a_hand 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+c:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+c_is_a_camera:(mk.val c essence camera 1) |[]
+(fact c_is_a_camera 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+; Camera objects
+co1:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co1_is_a_cam_obj:(mk.val co1 essence cam_obj 1) |[]
+(fact co1_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co2:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co2_is_a_cam_obj:(mk.val co2 essence cam_obj 1) |[]
+(fact co2_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+co3:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+co3_is_a_cam_obj:(mk.val co3 essence cam_obj 1) |[]
+(fact co3_is_a_cam_obj 0s:0ms:0us GIGASEC 1 1) [[SYNC_AXIOM now 1 forever stdin nil]]
+
+sys:(ent 1) [[SYNC_ONCE now 1 forever root nil]]
+
+; Hand movement
+S0:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val H: position P: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_move:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] []
+   (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
+   (fact (mk.val H: position (vec4 M_x: M_y: M_z: M_w:) :) RT0: RT1: : :)
+[]
+   (<> (vec4 DeltaX DeltaY DeltaZ DeltaW) (vec4 0 0 0 0))
+   M_x:(+ P_x DeltaX)
+   M_y:(+ P_y DeltaY)
+   M_z:(+ P_z DeltaZ)
+   M_w:(+ P_w DeltaW)
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   (<> (vec4 P_x P_y P_z P_w) (vec4 M_x M_y M_z M_w))
+   DeltaX:(sub M_x P_x)
+   DeltaY:(sub M_y P_y)
+   DeltaZ:(sub M_z P_z)
+   DeltaW:(sub M_w P_w)
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_move_req:(mdl [] []
+   (fact (icst S0 [] [H: (vec4 P_x: P_y: P_z: P_w:)] : :) T0: T1: : :)
+   (fact (imdl M_move [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] [DeltaX: DeltaY: DeltaZ: DeltaW: M_x: M_y: M_z: M_w: RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Grab cube
+; TOOD: Add hand at vertical 0 requirement
+S1:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val C: obj_type [0] :) T0: T1: : :)
+   (fact (mk.val H: holding [] :) T0: T1: : :)
+   (fact (mk.val C: position (vec2 145 173) :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_grab:(mdl [H: C: (ti T0: T1:)] []
+   (fact (cmd grab [H:] :) MT0: MT1: : :)
+   (fact (mk.val H: holding [C:] :) RT0: RT1: : :)
+[]
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_grab_req:(mdl [] []
+   (fact (icst S1 [] [H: C:] : :) T0: T1: : :)
+   (fact (imdl M_grab [H: C: (ti T0: T1:)] [RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Release models
+; C: 0, H: h, COL: 45, P: (vec4 v1: v2: v3: v4:), T0: 200, T1: 200
+S_holding:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+   (fact (mk.val H: holding [C:] :) T0: T1: : :)
+   (fact (mk.val C: color [COL:] :) T0: T1: : :)
+   (fact (mk.val H: position P: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_release:(mdl [H: C: (ti T0: T1:)] []
+   (fact (cmd release [H:] :) MT0: MT1: : :)
+   (fact (mk.val H: holding [] :) RT0: RT1: : :)
+[]
+   RT0:(+ T0 100ms)
+   RT1:(+ T1 100ms)
+[]
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_release_req:(mdl [] []
+   (fact (icst S_holding [] [H: C: COL: P:] : :) T0: T1: : :)
+   (fact (imdl M_release [H: C: (ti T0: T1:)] [RT0: RT1:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Move while holding moves the cube
+
+; M_move_cube:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) C: COL: (ti T0: T1:)] []
+;    (fact (imdl M_move [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] [DeltaX: DeltaY: DeltaZ: DeltaW: M_x: M_y: M_z: M_w: RT0: RT1:] : :) MT0: MT1: : :)
+;    (fact (mk.val COL: approximate_pos (vec4 M_x: M_y: M_z: M_w:) :) RT0: RT1: : :)
+; []
+;    (<> (vec4 DeltaX DeltaY DeltaZ DeltaW) (vec4 0 0 0 0))
+;    M_x:(+ P_x DeltaX)
+;    M_y:(+ P_y DeltaY)
+;    M_z:(+ P_z DeltaZ)
+;    M_w:(+ P_w DeltaW)
+;    RT0:(+ T0 100ms)
+;    RT1:(+ T1 100ms)
+; []
+;    (<> (vec4 P_x P_y P_z P_w) (vec4 M_x M_y M_z M_w))
+;    DeltaX:(sub M_x P_x)
+;    DeltaY:(sub M_y P_y)
+;    DeltaZ:(sub M_z P_z)
+;    DeltaW:(sub M_w P_w)
+;    MT0:(sub RT0 80ms)
+;    MT1:(sub RT1 100ms)
+;    T0:(sub RT0 100ms)
+;    T1:(sub RT1 100ms)
+; [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+; 
+; ; H: h, C: 0, COL: 45, P: (vec4 v1: v2: v3: v4:), T0: 200, T1: 200
+; M_move_cube_req:(mdl [] []
+;    (fact (icst S_holding [] [H: C: COL: P:] : :) T0: T1: : :)
+;    (fact (imdl M_move_cube [H: P: C: COL: (ti T0: T1:)] [DeltaX: DeltaY: DeltaZ: DeltaW: M_x: M_y: M_z: M_w: RT0: RT1:] : :) T0: T1: : :)
+; |[]
+; |[]
+; [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Moving changes cam position of cube
+
+S_cube_pos:(cst [] []
+   (fact (mk.val H: essence hand :) T0: T1: : :)
+   (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+   (fact (mk.val C: obj_type [0] :) T0: T1: : :)
+   (fact (mk.val C: position (vec2 PX: PY:) :) T0: T1: : :)
+   (fact (mk.val H: position HP: :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_cube_cam_pos:(mdl [H: C: P_x: P_y: (vec4 HP_x: HP_y: HP_z: HP_w:) (ti T0: T1:)] []
+   (fact (imdl M_move [H: (vec4 HP_x: HP_y: HP_z: HP_w:) (ti T0: T1:)] [DeltaX: DeltaY: 0 0 M_x: M_y: M_z: M_w: RT0: RT1:] : :) MT0: MT1: : :)
+   (fact (mk.val C: position (vec2 NP_x: NP_y:) :) RT0: RT1: : :)
+[]
+   (<> (vec2 DeltaX DeltaY) (vec2 0 0))
+   NP_x:(+ P_x (* DeltaY 1.175))
+   NP_y:(+ P_y DeltaX)
+   RT0:(add T0 100ms)
+   RT1:(add T1 100ms)
+[]
+   (<> (vec2 P_x P_y) (vec2 NP_x NP_y))
+   DeltaX:(- NP_y P_y)
+   DeltaY:(/ (- NP_x P_x) 1.175)
+   T0:(sub RT0 100ms)
+   T1:(sub RT1 100ms)
+   M_x:(+ HP_x DeltaX)
+   M_y:(+ HP_y DeltaY)
+   M_z:(+ HP_z 0)
+   M_w:(+ HP_w 0)
+   MT0:(sub RT0 80ms)
+   MT1:(sub RT1 100ms)
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+M_cube_cam_pos_req:(mdl [] []
+   (fact (icst S_cube_pos [] [H: C: PX: PY: HP:] : :) T0: T1: : :)
+   (fact (imdl M_cube_cam_pos [H: C: PX: PY: HP: (ti T0: T1:)] [DeltaX: DeltaY: M_x: M_y: M_z: M_w: RT0: RT1: NP_x: NP_y:] : :) T0: T1: : :)
+|[]
+|[]
+[stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Assumption model for absolute position of the cube
+
+; S_holding_obj_pos:(cst [] []
+;    (fact (mk.val C: essence cam_obj :) T0: T1: : :)
+;    (fact (mk.val H: essence hand :) T0: T1: : :)
+;    (fact (mk.val H: position P: :) T0: T1: : :)
+;    (fact (mk.val H: holding [C:] :) T0: T1: : :)
+;    (fact (mk.val C: color [COL:] :) T0: T1: : :)
+; |[]
+; |[]
+; [stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+; 
+; M_cube_pos_assumption:(mdl [] []
+;    (fact (icst S_holding_obj_pos [] [C: H: P: COL:] : :) T0: T1: : :)
+;    (fact (inj [(fact (mk.val COL: approximate_pos P: :) T0: T1: : :)]) T0: T1: : :)
+; |[]
+; |[]
+; [stdin] 1 1 1 1 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Start
+
+start:(pgm [] [] [] []
+   (cmd ready ["robot-cam.learned-demo"] 1)
+1) |[]
+(ipgm start [] RUN_ONCE 0s VOLATILE NOTIFY 1) [[SYNC_ONCE now 0 forever stdin nil 1]]
+
+; The drive models
+
+S_goal:(cst [] []
+   (fact (mk.val co1 color [2] 1) T0: T1: 1 1)
+   (fact (mk.val h holding [co1] 1) T0: T1: 1 1)
+   (fact (mk.val h position (vec4 240 0 -100 180) 1) T0: T1: 1 1)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S_goal_2:(cst [] []
+   (fact (mk.val co2 color [2] 1) T0: T1: 1 1)
+   (fact (mk.val h holding [co2] 1) T0: T1: 1 1)
+   (fact (mk.val h position (vec4 240 0 -100 180) 1) T0: T1: 1 1)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+S_goal_3:(cst [] []
+   (fact (mk.val co3 color [2] 1) T0: T1: 1 1)
+   (fact (mk.val h holding [co3] 1) T0: T1: 1 1)
+   (fact (mk.val h position (vec4 240 0 -100 180) 1) T0: T1: 1 1)
+|[]
+|[]
+[stdin] 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive:(mdl [] []
+   (fact (mk.val h holding [co1] 1) T0: T1: 1 1)
+   ; (fact (mk.val h position (vec4 320 -140 -50 45) 1) T0: T1: 1 1)
+   (fact run T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive2:(mdl [] []
+   (fact (icst S_goal [] [] : 1) T0: T1: 1 1)
+   (fact run2 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive2_2:(mdl [] []
+   (fact (icst S_goal_2 [] [] : 1) T0: T1: 1 1)
+   (fact run2 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive2_3:(mdl [] []
+   (fact (icst S_goal_3 [] [] : 1) T0: T1: 1 1)
+   (fact run2 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive3:(mdl [] []
+   (fact (mk.val 2 approximate_pos (vec4 240 0 -100 180) 1) T0: T1: 1 1)
+   (fact run3 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive4:(mdl [] []
+   (fact (mk.val h holding [] 1) T0: T1: 1 1)
+   (fact run4 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+m_drive5:(mdl [] []
+   (fact (mk.val h position (vec4 260 20 -15 45) 1) T0: T1: 1 1)
+   (fact run5 T0: T1: ::)
+|[]
+|[]
+[stdin drives] 1 1 1 0 1) [[SYNC_ONCE now 0 forever primary nil 1]]
+
+; Inject drives
+
+pgm_inject_drive_pass1:(pgm [] []
+   ; This fact repeats periodically. We use it as a "heartbeat".
+   (ptn (fact (mk.val h essence hand :) After: Before: ::) [])
+[]
+   (>= After (+ this.vw.ijt 100ms))
+   (<= After (+ this.vw.ijt 600ms))
+[]
+   ; The end of the time interval will be used in m_drive as the end of the goal interval.
+   (inj [F_run:(fact run2 After (+ Before 500ms) 1 1) []])
+   (inj [G:(goal F_run self nil 1) []])
+   (inj []
+      ; Delay a little to allow predictions for this sampling period before injecting the drive.
+      (fact G T0:(+ After 10ms) T0 1 1)
+      [SYNC_ONCE T0 1 forever primary nil]
+   )
+   (prb [1 "print" "injected drive 1" []])
+1) |[]
+(ipgm pgm_inject_drive_pass1 [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; Command to move the robot
+pgm_eject_cmd_mov_j:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd mov_j [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd mov_j [H P] 1)
+1) |[]
+(ipgm pgm_eject_cmd_mov_j [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to move the robot by relative coordinates
+pgm_eject_cmd_move:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd move [H: P:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd move [H P] 1)
+   (prb [1 "print" "Ejected move command" []])
+1) |[]
+(ipgm pgm_eject_cmd_move [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to grab
+pgm_eject_cmd_grab:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd grab [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd grab [H] 1)
+   (prb [1 "print" "Ejected grab command" []])
+1) |[]
+(ipgm pgm_eject_cmd_grab [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]
+
+; Command to release
+pgm_eject_cmd_release:(pgm [] []
+   (ptn (fact G:(goal (fact (cmd release [H:] :) ::) ::) ::) [])
+[]
+   ; Only eject non-simulation goals.
+   (= (is_sim G) false)
+[]
+   (cmd release [H] 1)
+1) |[]
+(ipgm pgm_eject_cmd_release [] RUN_ALWAYS MAX_TIME VOLATILE NOTIFY 1) []
+   [SYNC_ONCE now 0 forever primary nil 1]

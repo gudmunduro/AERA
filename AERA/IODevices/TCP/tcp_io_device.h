@@ -266,6 +266,8 @@ namespace tcp_io_device {
     template<class V>
     void injectOpCode(r_code::Code* entity, r_code::Code* object, std::vector<V> vals, core::Timestamp time, std::string opcode_handle);
 
+    void injectOpCode(r_code::Code* entity, r_code::Code* object, std::vector<Atom> vals, core::Timestamp time, std::string opcode_handle);
+      
     /**
     * Message handler for incoming setup messages. Fills the available entities_, objects_, and commands_ maps as well as
     * a mapping of id to string for fast access when receiving messages from the environment simulation.

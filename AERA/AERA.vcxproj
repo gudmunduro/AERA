@@ -276,6 +276,10 @@
     <Content Include="replicode_v1.2\external-cmd.replicode" />
     <Content Include="replicode_v1.2\robot-cam-demo.replicode" />
     <Content Include="replicode_v1.2\robot-cam-demo.tests.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.advanced2.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.advanced2.working1.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.advanced2.working2.replicode" />
+    <Content Include="replicode_v1.2\robot-cam.advanced2.working3.replicode" />
     <Content Include="replicode_v1.2\robot-cam.simple-learned-demo.replicode" />
     <Content Include="replicode_v1.2\robot-cam.advanced-learned-demo.working.replicode" />
     <Content Include="replicode_v1.2\robot-cam.simple-learned-demo_2.replicode" />

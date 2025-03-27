@@ -327,6 +327,10 @@ namespace tcp_io_device {
         msg_data = tcp_io_device::MsgData::createNewMsgData(stored_meta_data, data);
         break;
       }
+      case VariableDescription_DataType_UNCERTAIN_DOUBLE:
+      {
+        break;
+      }
       case VariableDescription_DataType_STRING:
       {
         // std::vector<bool> data = getDataVec<bool>(cmd, start, end, t);
@@ -379,6 +383,8 @@ namespace tcp_io_device {
         }
         data.push_back(cmd->code(i).asFloat());
       }
+      break;
+    case VariableDescription_DataType_UNCERTAIN_DOUBLE:
       break;
     case VariableDescription_DataType_STRING:
       // for (int i = start_index; i < end_index; ++i) {
@@ -571,6 +577,56 @@ namespace tcp_io_device {
         inject_marker_value_from_io_device(entity, obj, value, now, now + get_sampling_period(), r_exec::View::SYNC_PERIODIC, get_stdin());
         continue;
       }
+      else if (var.getMetaData().getType() == VariableDescription_DataType_UNCERTAIN_DOUBLE)
+      {
+        if (var.getMetaData().getOpCodeHandle() == "") {
+          //injectDefault<double>(entity, obj, var.getData<double>(), now);
+          std::cout << "Sending single uncertain value not supported yet" << std::endl;
+          continue;
+        }
+        else {
+          const auto data = var.getData<double>();
+          Code *fact =  new LObject(this);
+
+          fact->resize_code(6 + (data.size() / 2) * 4);
+
+          // References section
+          fact->set_reference(0, entity);
+          fact->set_reference(1, obj);
+
+          // Mk.val code
+          fact->code(0) = Atom::Marker(GetOpcode("mk.val"), 4);
+          fact->code(1) = Atom::RPointer(0); // Entity
+          fact->code(2) = Atom::RPointer(1); // Object/attribute
+          fact->code(3) = Atom::IPointer(5); // val
+          fact->code(4) = Atom::Float(1); // psln_thr.
+
+          core::uint16 op_code = r_exec::GetOpcode(var.getMetaData().getOpCodeHandle().c_str());
+          if (op_code == 0xFFFF) {
+            std::cout << "ERROR: Received message with unknown opcode handle! Handle: " << var.getMetaData().getOpCodeHandle() << std::endl;
+            return;
+          }
+
+          // Opcode object
+          fact->code(5) = Atom::Object(op_code, data.size() / 2);
+          
+          int code_index = 6;
+          for (int i = 0; i < data.size() / 2; i ++)
+          {
+            fact->code(code_index++) = Atom::IPointer((6 + data.size() / 2) + i * 3);
+          }
+          
+          for (int i = 0; i < data.size(); i += 2)
+          {
+            fact->code(code_index++) = Atom::Object(45, 2);
+            fact->code(code_index++) = Atom::Float(static_cast<float32>(data[i]));
+            fact->code(code_index++) = Atom::Float(static_cast<float32>(data[i+1]));
+          }
+
+          inject_fact_from_io_device(fact, now, now, View::SYNC_PERIODIC, _Mem::Get()->get_stdin());
+          continue;
+        }
+      }
       else if (var.getMetaData().getType() == VariableDescription_DataType_STRING) {
         /** @todo multidimensionality not working, yet*/
         std::string val = var.getData<std::string>()[0];
@@ -634,6 +690,10 @@ namespace tcp_io_device {
         cmd->code(7) = Atom::Nil();
       }
     }
+    else if (var.getMetaData().getType() == VariableDescription_DataType_UNCERTAIN_DOUBLE)
+    {
+      
+    }
 
     auto now = Now();
     auto relative_time = duration_cast<microseconds>(now - Utils::GetTimeReference());
@@ -695,17 +755,22 @@ namespace tcp_io_device {
   template<class O, class S>
   template<class V>
   void TcpIoDevice<O, S>::injectOpCode(r_code::Code* entity, r_code::Code* object, std::vector<V> vals, core::Timestamp time, std::string opcode_handle) {
-    core::uint16 op_code = r_exec::GetOpcode(opcode_handle.c_str());
-    if (op_code == 0xFFFF) {
-      std::cout << "ERROR: Received message with unknown opcode handle! Handle: " << opcode_handle << std::endl;
-      return;
-    }
     std::vector<Atom> atom_vals;
     for (auto it = vals.begin(); it != vals.end(); ++it) {
       // std::cout << *it << std::endl;
       atom_vals.push_back(Atom::Float(*it));
     }
-    inject_marker_value_from_io_device(entity, object, op_code, atom_vals, time, time);
+    injectOpCode(entity, object, atom_vals, time, opcode_handle);
+  }
+
+  template<class O, class S>
+  void TcpIoDevice<O, S>::injectOpCode(r_code::Code* entity, r_code::Code* object, std::vector<Atom> vals, core::Timestamp time, std::string opcode_handle) {
+    core::uint16 op_code = r_exec::GetOpcode(opcode_handle.c_str());
+    if (op_code == 0xFFFF) {
+      std::cout << "ERROR: Received message with unknown opcode handle! Handle: " << opcode_handle << std::endl;
+      return;
+    }
+    inject_marker_value_from_io_device(entity, object, op_code, vals, time, time);
   }
 
   template<class O, class S>

@@ -73,7 +73,7 @@ S4:(cst [] []
 ; Move models
 M0:(mdl [H: (vec4 P_x: P_y: P_z: P_w:) (ti T0: T1:)] []
    (fact (cmd move [H: (vec4 DeltaX: DeltaY: DeltaZ: DeltaW:)] :) MT0: MT1: : :)
-   (fact (mk.val H: position (vec4 (uncertain M_x: 0.35) (uncertain M_y: 0.34) (uncertain M_z: 0.33) (uncertain M_w: 0.32)) :) RT0: RT1: : :)
+   (fact (mk.val H: position (vec4 (uncertain M_x: 0.1) (uncertain M_y: 0.1) (uncertain M_z: 0.1) (uncertain M_w: 0.1)) :) RT0: RT1: : :)
 []
    M_x:(+ P_x DeltaX)
    M_y:(+ P_y DeltaY)
@@ -218,7 +218,7 @@ start:(pgm [] [] [] []
 ; The drive models
 
 m_drive:(mdl [] []
-   (fact (mk.val co1 approximate_pos (vec4 (uncertain 20 0.1) (uncertain 140 0.1) (uncertain 0 0.1) (uncertain 45 0.1)) 1) T0: T1: 1 1)
+   (fact (mk.val co1 approximate_pos (vec4 (uncertain 240 0.1) (uncertain 0 0.1) (uncertain 0 0.1) (uncertain 45 0.1)) 1) T0: T1: 1 1)
    (fact run T0: T1: ::)
 |[]
 |[]
